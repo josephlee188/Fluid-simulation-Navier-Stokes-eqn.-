@@ -4,7 +4,6 @@ mutable struct Fluid
     diff::Float64
     visc::Float64
 
-    src_a::Tuple{Float64,Float64}
     src_v::Tuple{Float64,Float64}
 
     # s::Array
@@ -38,7 +37,6 @@ function Fluid(dt, diffusion, viscosity)
     # aux[:,:,11] .= CuArray([i for i in 2:N-1, j in 2:N-1])
     # aux[:,:,12] .= CuArray([j for i in 2:N-1, j in 2:N-1])
 
-    src_a = (0.0, 0.0)
     src_v = (0.0, 80.0)
 
     s =         zeros(N,N)
@@ -52,7 +50,7 @@ function Fluid(dt, diffusion, viscosity)
     aux[:,:,12] .= [j for i in 2:N-1, j in 2:N-1]
 
     fluid = Fluid(N, dt, diffusion, viscosity,
-    src_a, src_v, s, density, Vx, Vy, Vx0, Vy0, aux)
+    src_v, s, density, Vx, Vy, Vx0, Vy0, aux)
     return fluid
 end
 
