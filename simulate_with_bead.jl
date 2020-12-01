@@ -37,18 +37,18 @@ bnd_ind3 = [CartesianIndex(1,2),
             CartesianIndex(N,2),
             CartesianIndex(N,N-1)]
 
-fluid = 0.0; # Free the previous gpu array
-fluid = Fluid(0.2, 1e-7, 2e-5)  # dt, 
+# fluid = 0.0; # Free the previous gpu array
+# fluid = Fluid(0.2, 1e-7, 2e-5)  # dt, 
 
-model = initialize(;extend=(N, N), fluid_obj=fluid)
+model = initialize(;N_beads=400, extend=(N, N), friction=30.0)
 
 points = get_position_points(model)
 
 scene = Scene(resolution=(1000,1000))
 
-fluid_d = Array(fluid.density)
+fluid_d = Array(model.fluid_obj.density)
 
-d_Node = Node(reshape(fluid_d, (N,N)))
+d_Node = Node(fluid_d)
 
 p_Node = Node(points)
 
@@ -57,15 +57,16 @@ heatmap!(scene, d_Node)
 scatter!(scene, p_Node)
 
 scatter_obj = scene[end]
-scatter_obj.attributes.markersize[] = 5
-scatter_obj.attributes.strokewidth[] = 3
+scatter_obj.attributes.markersize[] = 8
+scatter_obj.attributes.strokewidth[] = 1
+scatter_obj.attributes.color[] = :gray100
 
 scene[Axis].attributes.names.textsize[] = (2,2)
 scene[Axis].attributes.ticks.textsize[] = (2,2)
 
 scene
 
-## Live
+## Live ##
 # cx = Int(N/2)   # Source position x
 # cy = Int(N/2)   # Source position y
 # η = 0.1        # Rate of change of source angle
@@ -73,30 +74,34 @@ scene
 
 amount_d = 30.0
 amount_v = 1.0
-r = 100.0
+r = 50.0
 n_θ = 400
 η = 1.0
-
-
 color_range = (0.0, 30.0)
-nframe = 100
+nframes = 100
 
-simul_live!(scene, d_Node, p_Node, fluid, model,
-            nframe, 60)
+bead_model_live!(scene, p_Node, d_Node, model,
+            nframes, 60)
 
-## Save video
-n_frames = 500
+## Save video ##
+amount_d = 30.0
+amount_v = 1.0
+r = 100.0
+n_θ = 400
+η = 0.4
+color_range = (0.0, 30.0)
+n_frames = 300
 framerate = 60
 t_iterator = 1:n_frames
-cx = Int(N/2)
-cy = Int(N/2)
-ax = 0.0
-ay = 100.0
-vrate = 100.0
+# cx = Int(N/2)
+# cy = Int(N/2)
+# ax = 0.0
+# ay = 100.0
+# vrate = 100.0
 
-GLMakie.record(scene, "fluid_simulation.gif", t_iterator; framerate=framerate) do t 
+GLMakie.record(scene, "fluid_simulation2.gif", t_iterator; framerate=framerate) do t 
 
-    simul_step2!(d_Node, fluid)
+    @time bead_model_step!(p_Node, d_Node, model)
 
     scene[end].colorrange = (0.0, 15.0)
     

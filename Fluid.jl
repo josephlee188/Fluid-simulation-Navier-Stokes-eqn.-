@@ -78,9 +78,28 @@ function add_density!(fluid::Fluid, x, y, amount)
     fluid.density[[CartesianIndex(x,y),]] .+= cu([amount,])
 end
 
+# External force
 function add_velocity!(fluid::Fluid, x, y, amountx, amounty)
     fluid.Vx[[CartesianIndex(x,y),]] .+= cu([amountx,])
     fluid.Vy[[CartesianIndex(x,y),]] .+= cu([amounty,])
+end
+
+function add_density_circle!(fluid::Fluid, r, amount)
+    for θ in LinRange(0, 2π*(1-1/n_θ), n_θ)
+        x = Int(round(r * cos(θ) + N/2))
+        y = Int(round(r * sin(θ) + N/2))
+        add_density!(fluid, x, y, amount)
+    end
+end
+
+function add_velocity_circle!(fluid::Fluid, r, amount)
+    for θ in LinRange(0, 2π*(1-1/n_θ), n_θ)
+        x = Int(round(r * cos(θ) + N/2))
+        y = Int(round(r * sin(θ) + N/2))
+        vx = -amount * cos(θ) + η * randn()
+        vy = -amount * sin(θ) + η * randn()
+        add_velocity!(fluid, x, y, vx, vy)
+    end
 end
 
 get_rand_range(a,b) = (2*rand() - 1)*(a-b) + b  
@@ -92,37 +111,44 @@ get_angle(a,b) = begin
     ub >= 0 ? acos(ua) : 2π - acos(ua)
 end
 
-function simul_step2!(anode, fl)
+function simul_step2!(fl)
     # 'simul_step!' with sources added, and update the Node for 
     # visualization.
-    for i = -2:2
-        for j = -2:2
-            add_density!(fl, cx+i,cy+j, get_rand_range(200,300))
-        end
-    end
 
-    vx, vy = fl.src_v
+    #####################  Sources  #######################
+    # for i = -2:2
+    #     for j = -2:2
+    #         add_density!(fl, cx+i,cy+j, get_rand_range(200,300))
+    #     end
+    # end
 
-    add_velocity!(fl, cx, cy, vx, vy)
+    # vx, vy = fl.src_v
 
-    # Update velocity source direction
-    θ = get_angle(vx, vy)
+    # add_velocity!(fl, cx, cy, vx, vy)
 
-    θ += randn() * η
+    # # Update velocity source direction
+    # θ = get_angle(vx, vy)
 
-    fl.src_v = V.*(cos(θ), sin(θ))
+    # θ += randn() * η
 
-    @time simul_step!(fl)
+    # fl.src_v = V.*(cos(θ), sin(θ))
+    
+    add_density_circle!(fl, r, amount_d)
+    add_velocity_circle!(fl, r, amount_v)
 
-    anode[] = Array(fluid.density)
+    ########################################################
+
+    simul_step!(fl)
+
+    # anode[] = Array(fluid.density)
 end
 
-function simul_live!(scene, anode, fl, 
+function simul_live!(scene, dnode, pnode, fl, model, 
     nframe, framerate)
     for t = 1:nframe
-        simul_step2!(anode, fl)
+        simul_step2!(fl)
 
-        scene[end].colorrange = color_range
+        scene[2].colorrange = color_range
 
         sleep(1/framerate)
     end
