@@ -1,9 +1,9 @@
 # Fluid simulation with Navier Stokes equation.
 This is Julia implementation of fluid simulation (2D) using Navier Stokes equation
 
-This is written solely as a practice for Julia language.
+This was written solely as a practice for the Julia language.
 
-The algorithms presented here are almost direct copy of the following great sources;
+The core algorithms presented here were in large part borrowed from these following great sources;
 
 - https://mikeash.com/pyblog/fluid-simulation-for-dummies.html
 
